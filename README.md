@@ -1,50 +1,27 @@
-# Welcome to your Expo app 👋
+# Conecta Bairro
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo Expo Router com autenticação Supabase, perfil por role e rotas privadas para Lojista e Consultor.
 
-## Get started
+## Setup
 
-1. Install dependencies
+1. Crie um projeto no Supabase.
+2. Execute o SQL em [supabase/schema.sql](supabase/schema.sql) para criar `profiles`, RLS e o trigger de perfil.
+3. Preencha o arquivo [.env](.env) com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+4. Instale as dependências com `npm install`.
+5. Inicie o app com `npm start` ou `npx expo start`.
 
-   ```bash
-   npm install
-   ```
+## Fluxo de rotas
 
-2. Start the app
+- Público: `/login` e `/register`
+- Privado: `/lojista` e `/consultor`
+- Entrada do app: `/`, que redireciona para a área correta conforme a sessão e o role do usuário
 
-   ```bash
-   npx expo start
-   ```
+## Persistência de sessão
 
-In the output, you'll find options to open the app in a
+- Em dispositivos nativos a sessão é persistida com `expo-secure-store`.
+- No web, o armazenamento cai para `localStorage`.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Validação
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Login e cadastro usam `react-hook-form` + Zod.
+- Erros comuns do Supabase são convertidos para mensagens amigáveis.
