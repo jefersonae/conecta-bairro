@@ -25,9 +25,7 @@ const registerSchema = z.object({
   fullName: z.string().min(3, "Informe seu nome completo."),
   email: z.string().email("Digite um e-mail válido."),
   password: z.string().min(6, "A senha precisa ter no mínimo 6 caracteres."),
-  role: z.enum(["lojista", "consultor"], {
-    required_error: "Selecione um tipo de perfil.",
-  }),
+  role: z.enum(["lojista", "consultor", "administrador"]),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -46,6 +44,11 @@ const profileOptions: {
     label: "Consultor",
     value: "consultor",
     description: "Visão de acompanhamento, apoio e produtividade.",
+  },
+  {
+    label: "Administrador",
+    value: "administrador",
+    description: "Gestão de usuários, métricas e supervisão do programa.",
   },
 ];
 

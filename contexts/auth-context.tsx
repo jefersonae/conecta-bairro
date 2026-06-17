@@ -1,11 +1,18 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 
 import type { Session, User } from "@supabase/supabase-js";
 
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
 
-export type UserRole = "lojista" | "consultor";
+export type UserRole = "lojista" | "consultor" | "administrador";
 
 export type UserProfile = {
   id: string;
@@ -37,7 +44,11 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function normalizeRole(value: unknown): UserRole {
-  return value === "lojista" ? "lojista" : "consultor";
+  if (value === "lojista" || value === "administrador") {
+    return value;
+  }
+
+  return "consultor";
 }
 
 async function fetchProfile(user: User): Promise<UserProfile | null> {
@@ -127,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -136,41 +147,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw new Error(getFriendlyAuthErrorMessage(error.message));
     }
-  };
+  }, []);
 
-  const signUp = async ({ fullName, email, password, role }: RegisterInput) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role,
+  const signUp = useCallback(
+    async ({ fullName, email, password, role }: RegisterInput) => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      throw new Error(getFriendlyAuthErrorMessage(error.message));
-    }
-  };
+      if (error) {
+        throw new Error(getFriendlyAuthErrorMessage(error.message));
+      }
+    },
+    [],
+  );
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
       throw new Error(getFriendlyAuthErrorMessage(error.message));
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (!session?.user) {
       setProfile(null);
       return;
     }
 
     await syncProfile(session.user);
-  };
+  }, [session]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -184,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshProfile,
     }),
-    [initializing, profile, session],
+    [initializing, profile, refreshProfile, session, signIn, signOut, signUp],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -15,7 +15,13 @@ export default function IndexScreen() {
     }
 
     if (session) {
-      router.replace(role === "lojista" ? "/lojista" : "/consultor");
+      if (role === "administrador") {
+        router.replace("/administrador" as never);
+      } else {
+        router.replace(
+          role === "lojista" ? "/lojista" : ("/consultor" as never),
+        );
+      }
       return;
     }
 
@@ -33,7 +39,13 @@ export default function IndexScreen() {
   return (
     <Redirect
       href={
-        session ? (role === "lojista" ? "/lojista" : "/consultor") : "/login"
+        session
+          ? role === "administrador"
+            ? ("/administrador" as never)
+            : role === "lojista"
+              ? ("/lojista" as never)
+              : ("/consultor" as never)
+          : "/login"
       }
     />
   );

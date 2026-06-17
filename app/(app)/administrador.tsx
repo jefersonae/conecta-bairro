@@ -10,34 +10,27 @@ import {
     View,
 } from "react-native";
 
-import { SyncStatus } from "@/components/sync-status";
 import { useAuth } from "@/contexts/auth-context";
 
-export default function LojistaDashboard() {
+export default function AdministradorDashboard() {
   const router = useRouter();
   const { initializing, session, profile, role, signOut } = useAuth();
 
   useEffect(() => {
-    if (!initializing && session && role === "consultor") {
-      router.replace("/consultor");
+    if (!initializing && session && role !== "administrador") {
+      router.replace(role === "lojista" ? "/lojista" : "/consultor");
     }
   }, [initializing, role, router, session]);
 
-  if (initializing) {
+  if (initializing)
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#89f7d1" />
       </View>
     );
-  }
-
-  if (!session) {
-    return <Redirect href="/login" />;
-  }
-
-  if (role !== "lojista") {
+  if (!session) return <Redirect href="/login" />;
+  if (role !== "administrador")
     return <ActivityIndicator size="large" color="#89f7d1" />;
-  }
 
   const handleLogout = async () => {
     try {
@@ -54,24 +47,29 @@ export default function LojistaDashboard() {
   return (
     <View style={styles.screen}>
       <View style={styles.headerCard}>
-        <Text style={styles.kicker}>Painel do Lojista</Text>
+        <Text style={styles.kicker}>Painel do Administrador</Text>
         <Text style={styles.title}>
-          Bem-vindo, {profile?.full_name ?? "lojista"}.
+          Bem-vindo, {profile?.full_name ?? "administrador"}.
         </Text>
         <Text style={styles.description}>
-          Você está autenticado e com sessão persistida em armazenamento seguro.
+          Este painel concentra métricas, gestão de perfis e acompanhamento do
+          programa.
         </Text>
       </View>
 
-      <View style={styles.infoCard}>
-        <Text style={styles.infoLabel}>Perfil</Text>
-        <Text style={styles.infoValue}>Lojista</Text>
-        <Text style={styles.infoCaption}>
-          Você acompanha seu Plano de Ação e o progresso das tarefas sugeridas.
+      <View style={styles.metricsCard}>
+        <Text style={styles.metricLabel}>Métricas</Text>
+        <Text style={styles.metricValue}>
+          Atendimentos, maturidade média e gestão dinâmica do questionário.
         </Text>
       </View>
 
-      <SyncStatus />
+      <Pressable
+        style={styles.primaryButton}
+        onPress={() => router.push("/metricas" as never)}
+      >
+        <Text style={styles.primaryText}>Abrir métricas</Text>
+      </Pressable>
 
       <Pressable style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Sair</Text>
@@ -109,18 +107,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
-  title: {
-    color: "#f8fbff",
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: "800",
-  },
+  title: { color: "#f8fbff", fontSize: 30, lineHeight: 36, fontWeight: "800" },
   description: {
     color: "rgba(232, 241, 255, 0.78)",
     fontSize: 15,
     lineHeight: 22,
   },
-  infoCard: {
+  metricsCard: {
     backgroundColor: "rgba(137, 247, 209, 0.1)",
     borderColor: "rgba(137, 247, 209, 0.22)",
     borderRadius: 24,
@@ -128,22 +121,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
   },
-  infoLabel: {
+  metricLabel: {
     color: "rgba(232, 241, 255, 0.64)",
     textTransform: "uppercase",
     letterSpacing: 1.4,
     fontSize: 11,
     fontWeight: "700",
   },
-  infoValue: {
+  metricValue: {
     color: "#f8fbff",
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "700",
   },
-  infoCaption: {
-    color: "rgba(232, 241, 255, 0.72)",
-    lineHeight: 20,
+  primaryButton: {
+    minHeight: 52,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#89f7d1",
   },
+  primaryText: { color: "#07111f", fontSize: 16, fontWeight: "800" },
   logoutButton: {
     minHeight: 52,
     borderRadius: 18,
@@ -151,9 +149,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#ff7b7b",
   },
-  logoutText: {
-    color: "#07111f",
-    fontSize: 16,
-    fontWeight: "800",
-  },
+  logoutText: { color: "#07111f", fontSize: 16, fontWeight: "800" },
 });

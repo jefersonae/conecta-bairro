@@ -15,7 +15,17 @@ export default function AuthLayout() {
   }
 
   if (session) {
-    return <Redirect href={role === "lojista" ? "/lojista" : "/consultor"} />;
+    return (
+      <Redirect
+        href={
+          role === "administrador"
+            ? ("/administrador" as never)
+            : role === "lojista"
+              ? ("/lojista" as never)
+              : ("/consultor" as never)
+        }
+      />
+    );
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
