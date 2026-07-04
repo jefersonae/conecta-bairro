@@ -6,7 +6,7 @@ Aplicativo Expo Router com autenticação Supabase, perfil por role e rotas priv
 
 1. Crie um projeto no Supabase.
 2. Execute o SQL em [supabase/schema.sql](supabase/schema.sql) para criar `profiles`, RLS e o trigger de perfil.
-3. Preencha o arquivo [.env](.env) com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+3. Preencha o arquivo [.env](.env) com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_KEY`.
 4. Instale as dependências com `npm install`.
 5. Inicie o app com `npm start` ou `npx expo start`.
 

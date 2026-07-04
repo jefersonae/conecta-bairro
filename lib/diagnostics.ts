@@ -1,6 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { supabase } from "@/lib/supabase";
+import { diagnosticStorage } from "./diagnostic-storage";
 
 export type DiagnosticStatus = "pendente" | "sincronizado";
 
@@ -104,7 +103,7 @@ export function generateActionPlan(
 }
 
 export async function saveDiagnosticRecord(record: DiagnosticRecord) {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const raw = await diagnosticStorage.getItem(STORAGE_KEY);
   const list = raw ? (JSON.parse(raw) as DiagnosticRecord[]) : [];
   const existing = list.findIndex((item) => item.id === record.id);
 
@@ -114,7 +113,7 @@ export async function saveDiagnosticRecord(record: DiagnosticRecord) {
     list.unshift(record);
   }
 
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  await diagnosticStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
 export async function updateDiagnosticRecord(record: DiagnosticRecord) {
@@ -122,27 +121,27 @@ export async function updateDiagnosticRecord(record: DiagnosticRecord) {
 }
 
 export async function listDiagnosticRecords() {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const raw = await diagnosticStorage.getItem(STORAGE_KEY);
   if (!raw) return [] as DiagnosticRecord[];
   return JSON.parse(raw) as DiagnosticRecord[];
 }
 
 export async function queuePendingDiagnostic(record: DiagnosticRecord) {
-  const raw = await AsyncStorage.getItem(PENDING_KEY);
+  const raw = await diagnosticStorage.getItem(PENDING_KEY);
   const pending = raw ? (JSON.parse(raw) as DiagnosticRecord[]) : [];
   pending.push(record);
-  await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+  await diagnosticStorage.setItem(PENDING_KEY, JSON.stringify(pending));
 }
 
 export async function readPendingDiagnostics() {
-  const raw = await AsyncStorage.getItem(PENDING_KEY);
+  const raw = await diagnosticStorage.getItem(PENDING_KEY);
   return raw ? (JSON.parse(raw) as DiagnosticRecord[]) : [];
 }
 
 export async function clearPendingDiagnostic(id: string) {
   const pending = await readPendingDiagnostics();
   const next = pending.filter((item) => item.id !== id);
-  await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(next));
+  await diagnosticStorage.setItem(PENDING_KEY, JSON.stringify(next));
 }
 
 export async function syncPendingDiagnostics() {

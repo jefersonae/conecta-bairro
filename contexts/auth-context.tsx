@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import type { Session, User } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
 
 import { getFriendlyAuthErrorMessage } from "@/lib/auth-errors";
 import { supabase } from "@/lib/supabase";
@@ -155,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         options: {
+          emailRedirectTo: Linking.createURL("/callback"),
           data: {
             full_name: fullName,
             role,
