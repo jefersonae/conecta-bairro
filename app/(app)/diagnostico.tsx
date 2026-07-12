@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useRouter } from "expo-router";
 import {
@@ -12,28 +12,21 @@ import {
     View,
 } from "react-native";
 
-import { useAuth } from "@/contexts/auth-context";
 import {
     classifyMaturity,
     generateActionPlan,
     QUESTIONNAIRE,
-    queuePendingDiagnostic,
     saveDiagnosticRecord,
     scoreDiagnostic,
 } from "@/lib/diagnostics";
 
 export default function DiagnosticoScreen() {
   const router = useRouter();
-  const { role, session } = useAuth();
   const [shopName, setShopName] = useState("");
   const [shopAddress, setShopAddress] = useState("");
   const [niche, setNiche] = useState("");
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!session) router.replace("/login");
-  }, [router, session]);
 
   const totalScore = useMemo(() => {
     return QUESTIONNAIRE.reduce(
@@ -83,12 +76,11 @@ export default function DiagnosticoScreen() {
     try {
       setSubmitting(true);
       await saveDiagnosticRecord(record);
-      await queuePendingDiagnostic(record);
       Alert.alert(
         "Diagnóstico registrado",
-        "O diagnóstico foi salvo localmente e enviado para sincronização.",
+        "O diagnóstico foi salvo localmente.",
       );
-      router.replace(role === "lojista" ? "/lojista" : "/consultor");
+      router.replace("/consultor");
     } catch (error) {
       Alert.alert(
         "Falha",
@@ -109,8 +101,8 @@ export default function DiagnosticoScreen() {
           Avalie a maturidade tecnológica do comércio
         </Text>
         <Text style={styles.description}>
-          As respostas são armazenadas no dispositivo e sincronizadas
-          automaticamente quando houver rede.
+          As respostas são armazenadas no dispositivo e podem ser consultadas
+          depois.
         </Text>
       </View>
 
@@ -121,6 +113,7 @@ export default function DiagnosticoScreen() {
           onChangeText={setShopName}
           style={styles.input}
           placeholder="Ex.: Feira do Bairro"
+          placeholderTextColor="rgba(232, 241, 255, 0.4)"
         />
         <Text style={styles.label}>Endereço</Text>
         <TextInput
@@ -128,6 +121,7 @@ export default function DiagnosticoScreen() {
           onChangeText={setShopAddress}
           style={styles.input}
           placeholder="Rua, bairro, cidade"
+          placeholderTextColor="rgba(232, 241, 255, 0.4)"
         />
         <Text style={styles.label}>Nicho de atuação</Text>
         <TextInput
@@ -135,6 +129,7 @@ export default function DiagnosticoScreen() {
           onChangeText={setNiche}
           style={styles.input}
           placeholder="Mercado, moda, alimentação..."
+          placeholderTextColor="rgba(232, 241, 255, 0.4)"
         />
       </View>
 
@@ -177,7 +172,7 @@ export default function DiagnosticoScreen() {
         {submitting ? (
           <ActivityIndicator color="#07111f" />
         ) : (
-          <Text style={styles.submitText}>Salvar e sincronizar</Text>
+          <Text style={styles.submitText}>Salvar diagnóstico</Text>
         )}
       </Pressable>
     </ScrollView>

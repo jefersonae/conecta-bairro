@@ -1,92 +1,35 @@
-import { useEffect } from "react";
-
-import { Redirect, useRouter } from "expo-router";
-import {
-    ActivityIndicator,
-    Alert,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { SyncStatus } from "@/components/sync-status";
-import { useAuth } from "@/contexts/auth-context";
+import { getMockUserByProfile } from "@/lib/mock-users";
 
 export default function LojistaDashboard() {
-  const router = useRouter();
-  const { initializing, session, profile, role, signOut } = useAuth();
-
-  useEffect(() => {
-    if (!initializing && session && role === "consultor") {
-      router.replace("/consultor");
-    }
-  }, [initializing, role, router, session]);
-
-  if (initializing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#89f7d1" />
-      </View>
-    );
-  }
-
-  if (!session) {
-    return <Redirect href="/login" />;
-  }
-
-  if (role !== "lojista") {
-    return <ActivityIndicator size="large" color="#89f7d1" />;
-  }
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      router.replace("/login");
-    } catch (error) {
-      Alert.alert(
-        "Erro ao sair",
-        error instanceof Error ? error.message : "Tente novamente.",
-      );
-    }
-  };
+  const user = getMockUserByProfile("lojista");
 
   return (
     <View style={styles.screen}>
       <View style={styles.headerCard}>
         <Text style={styles.kicker}>Painel do Lojista</Text>
-        <Text style={styles.title}>
-          Bem-vindo, {profile?.full_name ?? "lojista"}.
-        </Text>
+        <Text style={styles.title}>Bem-vindo, {user.name}.</Text>
         <Text style={styles.description}>
-          Você está autenticado e com sessão persistida em armazenamento seguro.
+          Acompanhe seu plano de ação e o progresso das tarefas sugeridas.
         </Text>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.infoLabel}>Perfil</Text>
-        <Text style={styles.infoValue}>Lojista</Text>
+        <Text style={styles.infoLabel}>Usuário mockado</Text>
+        <Text style={styles.infoValue}>{user.email}</Text>
         <Text style={styles.infoCaption}>
-          Você acompanha seu Plano de Ação e o progresso das tarefas sugeridas.
+          Perfil {user.profile} · {user.company} · {user.neighborhood}
         </Text>
       </View>
 
       <SyncStatus />
-
-      <Pressable style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Sair</Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#07111f",
-  },
   screen: {
     flex: 1,
     backgroundColor: "#07111f",
@@ -143,17 +86,5 @@ const styles = StyleSheet.create({
   infoCaption: {
     color: "rgba(232, 241, 255, 0.72)",
     lineHeight: 20,
-  },
-  logoutButton: {
-    minHeight: 52,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ff7b7b",
-  },
-  logoutText: {
-    color: "#07111f",
-    fontSize: 16,
-    fontWeight: "800",
   },
 });

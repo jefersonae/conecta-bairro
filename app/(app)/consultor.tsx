@@ -1,114 +1,110 @@
-import { useEffect } from "react";
-
-import { Redirect, useRouter } from "expo-router";
-import {
-    ActivityIndicator,
-    Alert,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { SyncStatus } from "@/components/sync-status";
-import { useAuth } from "@/contexts/auth-context";
+import { MOCK_ACTION_PLAN_RECORDS } from "@/lib/mock-action-plans";
+import { getMockUserByProfile } from "@/lib/mock-users";
 
 export default function ConsultorDashboard() {
   const router = useRouter();
-  const { initializing, session, profile, role, signOut } = useAuth();
-
-  useEffect(() => {
-    if (!initializing && session && role === "lojista") {
-      router.replace("/lojista");
-    }
-  }, [initializing, role, router, session]);
-
-  if (initializing) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#89f7d1" />
-      </View>
-    );
-  }
-
-  if (!session) {
-    return <Redirect href="/login" />;
-  }
-
-  if (role !== "consultor") {
-    return <ActivityIndicator size="large" color="#89f7d1" />;
-  }
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      router.replace("/login");
-    } catch (error) {
-      Alert.alert(
-        "Erro ao sair",
-        error instanceof Error ? error.message : "Tente novamente.",
-      );
-    }
-  };
+  const user = getMockUserByProfile("consultor");
 
   return (
-    <View style={styles.screen}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.headerCard}>
         <Text style={styles.kicker}>Painel do Consultor</Text>
-        <Text style={styles.title}>
-          Bem-vindo, {profile?.full_name ?? "consultor"}.
-        </Text>
+        <Text style={styles.title}>Bem-vindo, {user.name}.</Text>
         <Text style={styles.description}>
-          O roteamento privado está ativo e direcionando cada perfil para sua
-          área.
+          Realize diagnósticos de maturidade digital e acompanhe os planos de
+          ação dos estabelecimentos.
         </Text>
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.infoLabel}>Perfil</Text>
-        <Text style={styles.infoValue}>Consultor</Text>
+        <Text style={styles.infoLabel}>Usuário mockado</Text>
+        <Text style={styles.infoValue}>{user.email}</Text>
         <Text style={styles.infoCaption}>
-          Este painel agora inclui o acesso ao diagnóstico digital e a
-          sincronização offline.
+          Perfil {user.profile} · {user.company} · {user.neighborhood}
         </Text>
       </View>
 
       <SyncStatus />
 
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Planos simulados</Text>
+        <Text style={styles.sectionSubtitle}>
+          Use esses exemplos para navegar pela estrutura dos planos de ação.
+        </Text>
+      </View>
+
+      {MOCK_ACTION_PLAN_RECORDS.map((record) => {
+        const pendingCount = record.actionPlan.filter(
+          (task) => task.status === "pendente",
+        ).length;
+
+        return (
+          <View key={record.id} style={styles.planCard}>
+            <View style={styles.planHeaderRow}>
+              <View style={styles.planMeta}>
+                <Text style={styles.planName}>{record.shopName}</Text>
+                <Text style={styles.planCaption}>{record.niche}</Text>
+              </View>
+              <View style={styles.planScoreBadge}>
+                <Text style={styles.planScoreText}>{record.score} pts</Text>
+              </View>
+            </View>
+
+            <Text style={styles.planSummary}>
+              {record.actionPlan.length} tarefas planejadas, {pendingCount} em
+              aberto.
+            </Text>
+
+            <View style={styles.planActionsRow}>
+              <Pressable
+                style={styles.planPrimaryButton}
+                onPress={() =>
+                  router.push({
+                    pathname: "/plano-acao",
+                    params: { id: record.id },
+                  })
+                }
+              >
+                <Text style={styles.planPrimaryText}>Abrir plano</Text>
+              </Pressable>
+            </View>
+          </View>
+        );
+      })}
+
       <Pressable
         style={styles.primaryButton}
-        onPress={() => router.push("/diagnostico" as never)}
+        onPress={() => router.push("/diagnostico")}
       >
         <Text style={styles.primaryText}>Novo diagnóstico</Text>
       </Pressable>
 
       <Pressable
         style={styles.secondaryButton}
-        onPress={() => router.push("/plano-acao" as never)}
+        onPress={() => router.push("/plano-acao")}
       >
         <Text style={styles.secondaryText}>Ver plano de ação</Text>
       </Pressable>
-
-      <Pressable style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Sair</Text>
-      </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#07111f",
-  },
   screen: {
     flex: 1,
     backgroundColor: "#07111f",
     padding: 20,
     gap: 16,
     justifyContent: "center",
+  },
+  content: {
+    padding: 20,
+    gap: 16,
+    paddingBottom: 40,
   },
   headerCard: {
     backgroundColor: "rgba(255, 255, 255, 0.04)",
@@ -160,6 +156,79 @@ const styles = StyleSheet.create({
     color: "rgba(232, 241, 255, 0.72)",
     lineHeight: 20,
   },
+  sectionHeader: {
+    gap: 4,
+  },
+  sectionTitle: {
+    color: "#f8fbff",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  sectionSubtitle: {
+    color: "rgba(232, 241, 255, 0.66)",
+    lineHeight: 18,
+    fontSize: 13,
+  },
+  planCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    gap: 12,
+  },
+  planHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  planMeta: {
+    flex: 1,
+    gap: 4,
+  },
+  planName: {
+    color: "#f8fbff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  planCaption: {
+    color: "rgba(232, 241, 255, 0.72)",
+    fontSize: 13,
+  },
+  planScoreBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "rgba(137, 247, 209, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(137, 247, 209, 0.22)",
+  },
+  planScoreText: {
+    color: "#89f7d1",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  planSummary: {
+    color: "rgba(232, 241, 255, 0.76)",
+    lineHeight: 19,
+  },
+  planActionsRow: {
+    flexDirection: "row",
+  },
+  planPrimaryButton: {
+    minHeight: 44,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#89f7d1",
+  },
+  planPrimaryText: {
+    color: "#07111f",
+    fontSize: 14,
+    fontWeight: "800",
+  },
   primaryButton: {
     minHeight: 52,
     borderRadius: 18,
@@ -183,18 +252,6 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     color: "#eef4ff",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  logoutButton: {
-    minHeight: 52,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#ff7b7b",
-  },
-  logoutText: {
-    color: "#07111f",
     fontSize: 16,
     fontWeight: "800",
   },

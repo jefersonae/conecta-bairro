@@ -1,49 +1,27 @@
 import { useEffect, useState } from "react";
 
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import {
-    readPendingDiagnostics,
-    syncPendingDiagnostics,
-} from "@/lib/diagnostics";
+import { listDiagnosticRecords } from "@/lib/diagnostics";
 
 export function SyncStatus() {
-  const [pendingCount, setPendingCount] = useState(0);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
-      const pending = await readPendingDiagnostics();
-      setPendingCount(pending.length);
+      const records = await listDiagnosticRecords();
+      setCount(records.length);
     };
 
     void load();
   }, []);
 
-  useEffect(() => {
-    const sync = async () => {
-      const pending = await readPendingDiagnostics();
-      if (!pending.length) return;
-
-      try {
-        await syncPendingDiagnostics();
-        setPendingCount(0);
-      } catch (error) {
-        Alert.alert(
-          "Sincronização",
-          error instanceof Error ? error.message : "Falha na sincronização.",
-        );
-      }
-    };
-
-    void sync();
-  }, []);
-
   return (
     <View style={styles.badge}>
       <Text style={styles.badgeText}>
-        {pendingCount
-          ? `${pendingCount} diagnóstico(s) pendente(s)`
-          : "Sincronização em dia"}
+        {count
+          ? `${count} diagnóstico(s) registrado(s)`
+          : "Nenhum diagnóstico registrado"}
       </Text>
     </View>
   );

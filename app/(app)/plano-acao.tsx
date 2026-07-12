@@ -2,26 +2,39 @@ import { useEffect, useState } from "react";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 import { listDiagnosticRecords, updateTaskStatus } from "@/lib/diagnostics";
+import { getMockActionPlanRecord } from "@/lib/mock-action-plans";
 
 export default function PlanoAcaoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const [record, setRecord] = useState<any>(null);
+  const [isMockRecord, setIsMockRecord] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      if (!params.id) return;
       const records = await listDiagnosticRecords();
-      setRecord(records.find((item) => item.id === params.id) ?? null);
+      const selectedRecord = params.id
+        ? records.find((item) => item.id === params.id)
+        : records[0];
+
+      if (selectedRecord) {
+        setRecord(selectedRecord);
+        setIsMockRecord(false);
+        return;
+      }
+
+      setRecord(getMockActionPlanRecord(params.id));
+      setIsMockRecord(true);
     };
 
     void load();
@@ -32,6 +45,21 @@ export default function PlanoAcaoScreen() {
     status: "pendente" | "em execução" | "concluído",
   ) => {
     if (!record) return;
+
+    if (isMockRecord) {
+      setRecord((current: any) => ({
+        ...current,
+        actionPlan: current.actionPlan.map((task: any) =>
+          task.id === taskId ? { ...task, status } : task,
+        ),
+      }));
+      Alert.alert(
+        "Plano mockado",
+        "Este plano de ação esta usando dados simulados apenas para desenvolvimento.",
+      );
+      return;
+    }
+
     const updated = await updateTaskStatus(record.id, taskId, status);
     setRecord(updated ?? record);
   };
@@ -51,6 +79,11 @@ export default function PlanoAcaoScreen() {
       <Text style={styles.description}>
         Atualize o status das tarefas e acompanhe o progresso remotamente.
       </Text>
+      {isMockRecord ? (
+        <View style={styles.mockBadge}>
+          <Text style={styles.mockBadgeText}>Dados mockados</Text>
+        </View>
+      ) : null}
 
       {record.actionPlan.map((task: any) => (
         <View key={task.id} style={styles.taskCard}>
@@ -111,6 +144,20 @@ const styles = StyleSheet.create({
     color: "rgba(232, 241, 255, 0.78)",
     fontSize: 14,
     lineHeight: 20,
+  },
+  mockBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "rgba(137, 247, 209, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(137, 247, 209, 0.24)",
+  },
+  mockBadgeText: {
+    color: "#89f7d1",
+    fontSize: 12,
+    fontWeight: "700",
   },
   taskCard: {
     backgroundColor: "rgba(255, 255, 255, 0.04)",

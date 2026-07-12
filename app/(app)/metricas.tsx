@@ -1,24 +1,74 @@
+import { useMemo } from "react";
+
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { MOCK_ACTION_PLAN_RECORDS } from "@/lib/mock-action-plans";
+
 export default function MetricasScreen() {
+  const metrics = useMemo(() => {
+    const totalDiagnosticos = MOCK_ACTION_PLAN_RECORDS.length;
+    const totalTarefas = MOCK_ACTION_PLAN_RECORDS.reduce(
+      (sum, record) => sum + record.actionPlan.length,
+      0,
+    );
+    const tarefasConcluidas = MOCK_ACTION_PLAN_RECORDS.reduce(
+      (sum, record) =>
+        sum +
+        record.actionPlan.filter((task) => task.status === "concluído").length,
+      0,
+    );
+    const tarefasEmExecucao = MOCK_ACTION_PLAN_RECORDS.reduce(
+      (sum, record) =>
+        sum +
+        record.actionPlan.filter((task) => task.status === "em execução")
+          .length,
+      0,
+    );
+    const tarefasPendentes =
+      totalTarefas - tarefasConcluidas - tarefasEmExecucao;
+    const maturidadeMedia =
+      totalDiagnosticos === 0
+        ? "Inicial"
+        : (() => {
+            const averageScore =
+              MOCK_ACTION_PLAN_RECORDS.reduce(
+                (sum, record) => sum + record.score,
+                0,
+              ) / totalDiagnosticos;
+
+            if (averageScore >= 5) return "Avançado";
+            if (averageScore >= 3) return "Intermediário";
+            return "Inicial";
+          })();
+
+    return {
+      totalDiagnosticos,
+      totalTarefas,
+      tarefasConcluidas,
+      tarefasEmExecucao,
+      tarefasPendentes,
+      maturidadeMedia,
+    };
+  }, []);
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.headerCard}>
         <Text style={styles.kicker}>Métricas</Text>
         <Text style={styles.title}>Painel administrativo</Text>
         <Text style={styles.description}>
-          Aqui o administrador pode consolidar volume de atendimentos,
-          maturidade média e segmentação por região e nicho.
+          Aqui o administrador acompanha os indicadores consolidados a partir
+          dos planos de ação simulados.
         </Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.metricLabel}>Volume de atendimentos</Text>
-        <Text style={styles.metricValue}>0</Text>
+        <Text style={styles.metricValue}>{metrics.totalDiagnosticos}</Text>
       </View>
       <View style={styles.card}>
         <Text style={styles.metricLabel}>Maturidade média</Text>
-        <Text style={styles.metricValue}>Inicial</Text>
+        <Text style={styles.metricValue}>{metrics.maturidadeMedia}</Text>
       </View>
       <View style={styles.card}>
         <Text style={styles.metricLabel}>Regional</Text>
@@ -27,6 +77,23 @@ export default function MetricasScreen() {
       <View style={styles.card}>
         <Text style={styles.metricLabel}>Nicho</Text>
         <Text style={styles.metricValue}>Diversos</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.metricLabel}>Tarefas planejadas</Text>
+        <Text style={styles.metricValue}>{metrics.totalTarefas}</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.metricLabel}>Tarefas em aberto</Text>
+        <Text style={styles.metricValue}>{metrics.tarefasPendentes}</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.metricLabel}>Tarefas em execução</Text>
+        <Text style={styles.metricValue}>{metrics.tarefasEmExecucao}</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.metricLabel}>Tarefas concluídas</Text>
+        <Text style={styles.metricValue}>{metrics.tarefasConcluidas}</Text>
       </View>
     </ScrollView>
   );

@@ -1,4 +1,3 @@
-import { supabase } from "@/lib/supabase";
 import { diagnosticStorage } from "./diagnostic-storage";
 
 export type DiagnosticStatus = "pendente" | "sincronizado";
@@ -32,7 +31,6 @@ export type DiagnosticRecord = {
 };
 
 const STORAGE_KEY = "conecta-bairro:diagnostics";
-const PENDING_KEY = "conecta-bairro:diagnostics-pending";
 
 export const QUESTIONNAIRE = [
   {
@@ -98,7 +96,7 @@ export function generateActionPlan(
     id: `task-${Date.now()}-${index}`,
     title: task.title,
     description: task.description,
-    status: "pendente",
+    status: "pendente" as const,
   }));
 }
 
@@ -126,58 +124,6 @@ export async function listDiagnosticRecords() {
   return JSON.parse(raw) as DiagnosticRecord[];
 }
 
-export async function queuePendingDiagnostic(record: DiagnosticRecord) {
-  const raw = await diagnosticStorage.getItem(PENDING_KEY);
-  const pending = raw ? (JSON.parse(raw) as DiagnosticRecord[]) : [];
-  pending.push(record);
-  await diagnosticStorage.setItem(PENDING_KEY, JSON.stringify(pending));
-}
-
-export async function readPendingDiagnostics() {
-  const raw = await diagnosticStorage.getItem(PENDING_KEY);
-  return raw ? (JSON.parse(raw) as DiagnosticRecord[]) : [];
-}
-
-export async function clearPendingDiagnostic(id: string) {
-  const pending = await readPendingDiagnostics();
-  const next = pending.filter((item) => item.id !== id);
-  await diagnosticStorage.setItem(PENDING_KEY, JSON.stringify(next));
-}
-
-export async function syncPendingDiagnostics() {
-  const pending = await readPendingDiagnostics();
-  if (!pending.length) return [];
-
-  const synced: DiagnosticRecord[] = [];
-
-  for (const record of pending) {
-    const { error } = await supabase.from("digital_diagnoses").upsert(
-      {
-        id: record.id,
-        shop_name: record.shopName,
-        shop_address: record.shopAddress,
-        niche: record.niche,
-        consultant_name: record.consultantName,
-        score: record.score,
-        maturity: record.maturity,
-        answers: record.answers,
-        action_plan: record.actionPlan,
-        status: "sincronizado",
-      },
-      { onConflict: "id" },
-    );
-
-    if (!error) {
-      const syncedRecord = { ...record, status: "sincronizado" as const };
-      await updateDiagnosticRecord(syncedRecord);
-      synced.push(syncedRecord);
-      await clearPendingDiagnostic(record.id);
-    }
-  }
-
-  return synced;
-}
-
 export async function updateTaskStatus(
   recordId: string,
   taskId: string,
@@ -193,7 +139,6 @@ export async function updateTaskStatus(
   );
 
   await updateDiagnosticRecord(record);
-  await queuePendingDiagnostic(record);
 
   return record;
 }
