@@ -8,6 +8,7 @@ import { getMockUserByProfile } from "@/lib/mock-users";
 export default function ConsultorDashboard() {
   const router = useRouter();
   const user = getMockUserByProfile("consultor");
+  const records = MOCK_ACTION_PLAN_RECORDS ?? [];
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -37,8 +38,9 @@ export default function ConsultorDashboard() {
         </Text>
       </View>
 
-      {MOCK_ACTION_PLAN_RECORDS.map((record) => {
-        const pendingCount = record.actionPlan.filter(
+      {records.map((record) => {
+        const tasks = record.actionPlan ?? [];
+        const pendingCount = tasks.filter(
           (task) => task.status === "pendente",
         ).length;
 
@@ -55,8 +57,7 @@ export default function ConsultorDashboard() {
             </View>
 
             <Text style={styles.planSummary}>
-              {record.actionPlan.length} tarefas planejadas, {pendingCount} em
-              aberto.
+              {tasks.length} tarefas planejadas, {pendingCount} em aberto.
             </Text>
 
             <View style={styles.planActionsRow}>
@@ -99,12 +100,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#07111f",
     padding: 20,
     gap: 16,
-    justifyContent: "center",
   },
   content: {
     padding: 20,
     gap: 16,
     paddingBottom: 40,
+    flexGrow: 1,
+    justifyContent: "center",
   },
   headerCard: {
     backgroundColor: "rgba(255, 255, 255, 0.04)",

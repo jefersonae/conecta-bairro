@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -53,10 +52,6 @@ export default function PlanoAcaoScreen() {
           task.id === taskId ? { ...task, status } : task,
         ),
       }));
-      Alert.alert(
-        "Plano mockado",
-        "Este plano de ação esta usando dados simulados apenas para desenvolvimento.",
-      );
       return;
     }
 

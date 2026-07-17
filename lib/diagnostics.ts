@@ -119,9 +119,15 @@ export async function updateDiagnosticRecord(record: DiagnosticRecord) {
 }
 
 export async function listDiagnosticRecords() {
-  const raw = await diagnosticStorage.getItem(STORAGE_KEY);
-  if (!raw) return [] as DiagnosticRecord[];
-  return JSON.parse(raw) as DiagnosticRecord[];
+  try {
+    const raw = await diagnosticStorage.getItem(STORAGE_KEY);
+    if (!raw) return [] as DiagnosticRecord[];
+
+    const parsed = JSON.parse(raw) as DiagnosticRecord[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [] as DiagnosticRecord[];
+  }
 }
 
 export async function updateTaskStatus(
